@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101720">
+  <title>ARKEMNOR | Sprite & Map Editor</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span><div><strong>ARKEMNOR</strong><small>Sprite & Map Editor · Alpha 0.1</small></div></div>
+    <nav class="tabs" aria-label="Espacios de trabajo">
+      <button type="button" class="tab active" data-view="map" aria-pressed="true">◈ Map Editor</button>
+      <button type="button" class="tab" data-view="sprite" aria-pressed="false">▦ Sprite Studio</button>
+    </nav>
+    <div class="actions">
+      <button id="open-map" class="secondary" title="Abrir TMJ y sus imágenes">Importar TMJ</button>
+      <button id="save-map" class="secondary">Exportar TMJ</button>
+      <button id="save-zip" class="primary">Exportar ZIP Tiled</button>
+    </div>
+  </header>
+  <main>
+    <section id="map-view" class="workspace">
+      <aside class="pane tile-pane">
+        <div class="pane-title"><h2>Biblioteca de terrenos</h2><span class="tiny-tag">PNG</span></div>
+        <label for="tileset-select">Tileset activo</label>
+        <select id="tileset-select" aria-label="Tileset activo"></select>
+        <div class="inline-fields">
+          <label>Ancho del tile <input id="tileset-width" type="number" min="8" max="128" value="32"></label>
+          <label>Alto del tile <input id="tileset-height" type="number" min="8" max="128" value="32"></label>
+        </div>
+        <button id="add-tileset" class="block secondary">+ Importar tileset PNG</button>
+        <div class="label-row"><h3>Paleta de tiles</h3><span id="tile-meta">—</span></div>
+        <div class="palette-scroll"><canvas id="palette" aria-label="Paleta: seleccionar un tile" tabindex="0"></canvas></div>
+        <div class="palette-caption">Selecciona un tile para pintar el mapa. La imagen conserva sus píxeles, sin suavizado.</div>
+        <div class="selection-box"><span>Tile seleccionado</span><strong id="tile-selection">GID 1</strong></div>
+      </aside>
+      <section class="stage-column">
+        <div class="map-toolbar" role="toolbar" aria-label="Herramientas de mapa">
+          <button class="tool active" data-tool="brush" title="Pincel (B)" aria-pressed="true">✎ <span>Pincel</span></button>
+          <button class="tool" data-tool="erase" title="Borrar (E)" aria-pressed="false">⌫ <span>Borrar</span></button>
+          <button class="tool" data-tool="fill" title="Rellenar (F)" aria-pressed="false">▧ <span>Rellenar</span></button>
+          <button class="tool" data-tool="pick" title="Seleccionar tile (I)" aria-pressed="false">◉ <span>Copiar</span></button>
+          <button class="tool" data-tool="object" title="Colocar entidad (O)" aria-pressed="false">⚑ <span>Entidad</span></button>
+          <button class="tool" data-tool="pan" title="Mover vista (H)" aria-pressed="false">✥ <span>Mover</span></button>
+          <div class="toolbar-spacer"></div>
+          <button id="undo" class="icon-btn" title="Deshacer (Ctrl+Z)" aria-label="Deshacer">↶</button>
+          <button id="redo" class="icon-btn" title="Rehacer (Ctrl+Y)" aria-label="Rehacer">↷</button>
+          <button id="toggle-grid" class="icon-btn active" title="Mostrar u ocultar cuadrícula" aria-pressed="true">▦</button>
+        </div>
+        <div id="map-viewport" class="map-viewport" tabindex="0" aria-label="Lienzo del mapa. Pincel y relleno con clic; rueda para acercar.">
+          <canvas id="map-canvas"></canvas>
+          <div class="viewport-top"><span id="map-badge">VALDREN · Prototipo</span></div>
+          <div id="cursor" class="viewport-cursor" hidden></div>
+          <div class="viewport-bottom"><span id="map-cursor">X: — · Y: —</span><span id="zoom-info">100%</span></div>
+        </div>
+        <div class="bottom-strip">
+          <span>Rueda: zoom · Espacio/rueda central: mover · B/E/F/I/O/H: herramientas</span>
+          <div class="zoom-controls"><button id="zoom-out" aria-label="Alejar">−</button><button id="fit-map">Ajustar</button><button id="zoom-in" aria-label="Acercar">+</button></div>
+        </div>
+      </section>
+      <aside class="pane properties-pane">
+        <div class="pane-title"><h2>Mapa y capas</h2><span class="tiny-tag">TMJ</span></div>
+        <label>Nombre del mapa <input id="map-name" type="text" maxlength="70" value="Valdren - Demo"></label>
+        <div class="inline-fields">
+          <label>Columnas <input id="map-width" type="number" min="1" max="256" value="32"></label>
+          <label>Filas <input id="map-height" type="number" min="1" max="256" value="22"></label>
+        </div>
+        <button id="resize-map" class="block secondary">Aplicar dimensiones</button>
+        <div class="section-heading"><h3>Capas</h3><button id="add-layer" title="Añadir capa de tiles" aria-label="Añadir capa">+ Capa</button></div>
+        <div id="layer-list" class="layer-list"></div>
+        <div class="layer-actions">
+          <button id="layer-up" title="Mover capa arriba">↑ Subir</button>
+          <button id="layer-down" title="Mover capa abajo">↓ Bajar</button>
+          <button id="layer-delete" title="Eliminar capa">Eliminar</button>
+        </div>
+        <hr>
+        <h3>Entidades / puntos</h3>
+        <label>Tipo de entidad
+          <select id="object-type"><option>Spawn</option><option>NPC</option><option>Monster</option><option>Portal</option><option>Trigger</option></select>
+        </label>
+        <label>Nombre <input id="object-name" type="text" maxlength="80" value="Spawn principal"></label>
+        <p class="subtle">Selecciona «Entidad» y pulsa en el mapa para colocar un punto en la capa Entities. Utiliza «Borrar» sobre un punto para quitarlo.</p>
+        <hr>
+        <button id="new-map" class="block subtle-btn">Crear mapa vacío</button>
+        <p id="assets-status" class="subtle"></p>
+      </aside>
+    </section>
+
+    <section id="sprite-view" class="sprite-workspace" hidden>
+      <aside class="pane sprite-options">
+        <div class="pane-title"><h2>Spritesheet</h2><span class="tiny-tag">PNG / RGBA</span></div>
+        <button id="open-sprite" class="primary block">Importar spritesheet PNG</button>
+        <div id="sprite-file-name" class="file-detail">Ninguna imagen cargada</div>
+        <h3>Segmentación</h3>
+        <div class="inline-fields">
+          <label>Ancho por frame <input id="sprite-width" type="number" min="1" max="512" value="32"></label>
+          <label>Alto por frame <input id="sprite-height" type="number" min="1" max="512" value="32"></label>
+        </div>
+        <div class="inline-fields">
+          <label>Frames / dirección <input id="sprite-frames" type="number" min="1" max="32" value="4"></label>
+          <label>FPS <input id="sprite-fps" type="number" min="1" max="30" value="6"></label>
+        </div>
+        <div class="inline-fields">
+          <label>Columna inicial <input id="sprite-offset-x" type="number" min="0" max="256" value="0"></label>
+          <label>Fila inicial <input id="sprite-offset-y" type="number" min="0" max="256" value="0"></label>
+        </div>
+        <h3>Direcciones (fila relativa)</h3>
+        <div class="inline-fields">
+          <label>Sur <input id="row-south" type="number" min="0" max="256" value="0"></label>
+          <label>Este <input id="row-east" type="number" min="0" max="256" value="1"></label>
+        </div>
+        <div class="inline-fields">
+          <label>Norte <input id="row-north" type="number" min="0" max="256" value="2"></label>
+          <label>Oeste <input id="row-west" type="number" min="0" max="256" value="3"></label>
+        </div>
+        <button id="export-sprite" class="secondary block">Exportar configuración JSON</button>
+        <p class="subtle">Compatible con sprites de 32×32, 64×64, criaturas grandes y spritesheets con filas configurables. La exportación JSON es una especificación propia de ARKEMNOR, no un mapa Tiled.</p>
+      </aside>
+      <section class="sprite-stage">
+        <div class="sprite-head"><div><h2>Previsualizador de animación</h2><p id="sprite-status">Carga un PNG para inspeccionar sus frames.</p></div>
+          <div class="sprite-play-controls">
+            <button id="sprite-play" class="primary">▶ Reproducir</button>
+            <button id="sprite-step" class="secondary">→ Frame</button>
+          </div>
+        </div>
+        <div class="sprite-display"><canvas id="sprite-preview" aria-label="Vista animada del sprite"></canvas></div>
+        <div class="sprite-directions" role="group" aria-label="Dirección del personaje">
+          <button data-direction="south" class="active">↓ Sur</button>
+          <button data-direction="east">→ Este</button>
+          <button data-direction="north">↑ Norte</button>
+          <button data-direction="west">← Oeste</button>
+        </div>
+        <div class="sprite-head compact"><h3>Inspección de la hoja</h3><span id="sprite-frame-info">Frame —</span></div>
+        <div class="sprite-sheet-scroll"><canvas id="sprite-sheet" tabindex="0" aria-label="Hoja de sprites y selección de frame"></canvas></div>
+      </section>
+    </section>
+  </main>
+  <footer class="statusbar"><span id="status" role="status" aria-live="polite">Editor listo.</span><span>ARKEMNOR · Herramienta independiente · Sin servicios externos</span></footer>
+</div>
+<input id="map-file" type="file" accept=".tmj,.json,.png,image/png,application/json" multiple hidden>
+<input id="tileset-file" type="file" accept=".png,image/png" multiple hidden>
+<input id="sprite-file" type="file" accept=".png,image/png" hidden>
+<script type="module" src="./src/main.mjs"></script>
+</body>
+</html>
