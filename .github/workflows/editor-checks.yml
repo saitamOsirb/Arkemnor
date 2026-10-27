@@ -1,0 +1,24 @@
+name: Sprite and Map Editor checks
+
+on:
+  push:
+    paths:
+      - 'tools/arkemnor-editor/**'
+      - '.github/workflows/editor-checks.yml'
+  workflow_dispatch:
+
+jobs:
+  editor-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          for file in tools/arkemnor-editor/src/*.mjs; do node --check "$file"; done
+      - name: Run unit tests
+        run: node --test tools/arkemnor-editor/tests/tiled.test.mjs

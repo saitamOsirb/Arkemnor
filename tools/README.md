@@ -1,14 +1,19 @@
 # Tools — ARKEMNOR
 
-Espacio **independiente** para herramientas de desarrollo y producción. No forman parte del cliente ni del servidor distribuido.
+Herramientas autónomas del pipeline de desarrollo. No se compilan junto con el cliente Godot ni con el servidor C#.
 
-Herramientas previstas, sujetas a diseño e implementación:
+## Disponible
 
-- Editor de mapas 2.5D y biomas.
-- Visor/importador de sprites, personajes, efectos y animaciones.
-- Validadores de datos de criaturas, objetos, habilidades y zonas.
-- Herramientas de compilación de recursos y diagnóstico.
+**[ARKEMNOR Sprite & Map Editor](arkemnor-editor/README.md)** — Editor web sin dependencias, visor de spritesheets por dirección, pintura de terrenos por capas y exportación/importación Tiled TMJ/JSON con imágenes PNG.
 
-Cada herramienta podrá utilizar su propia tecnología, configuración y dependencias en una subcarpeta dentro de `tools/`. No se impone una dependencia global en la raíz del repositorio.
+Para iniciar desde la raíz del repositorio:
 
-Estado: estructura reservada; todavía no hay herramientas ejecutables.
+```bash
+python -m http.server 8080 --directory tools/arkemnor-editor
+```
+
+Abrir http://localhost:8080
+
+## Regla de independencia
+
+Las herramientas pueden evolucionar dentro de `tools/` con su propia tecnología y configuración; no forman parte del cliente ni del runtime del servidor.
